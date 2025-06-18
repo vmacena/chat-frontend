@@ -1,22 +1,27 @@
 'use client';
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useChat } from "@/app/hooks/useChat";
 import { ChatMessage } from "@/app/components/ChatMessage";
+import ContactList, { ContactListHandle } from "@/app/components/ContactList";
 import {
+  PageWrapper,
   ChatContainer,
   ChatBody,
-  ChatFooter,
   Messages,
   Input,
   Button,
 } from "./styles";
+import ChatFooter from "@/app/components/ChatFooter";
 
 const ChatPage: React.FC = () => {
   const [token, setToken] = useState("");
   const [receiverId, setReceiverId] = useState("");
   const [content, setContent] = useState("");
   const [ready, setReady] = useState(false);
+
+  const { sendMessage, getConversation, messages, isConnected } = useChat(token);
+  const contactListRef = useRef<ContactListHandle>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -25,76 +30,47 @@ const ChatPage: React.FC = () => {
     if (trimmed && trimmed.split(".").length === 3) {
       setToken(trimmed);
       setReady(true);
-    } else {
-      console.error("Token ausente ou malformatado:", trimmed);
     }
   }, []);
 
-  const { sendMessage, getConversation, messages, isConnected } = useChat(token);
+  useEffect(() => {
+    if (receiverId && isConnected) {
+      getConversation(receiverId);
+    }
+  }, [receiverId, isConnected]);
 
   if (!ready) return null;
 
   return (
-    <ChatContainer>
-      <ChatBody>
-        <Messages>
-          {messages.map((msg, index) => (
-            <ChatMessage
-              key={index}
-              isMe={msg.isMe}
-              isLog={msg.isLog}
-              content={msg.content}
-              sentAt={msg.sentAt}
-            />
-          ))}
-        </Messages>
-      </ChatBody>
-      <ChatFooter>
-        <Input
-          type="text"
-          placeholder="ID do destinatário"
-          value={receiverId}
-          onChange={(e) => setReceiverId(e.target.value)}
+    <PageWrapper>
+      <ContactList ref={contactListRef} selectedId={receiverId} onSelect={setReceiverId} />
+      <ChatContainer>
+        <ChatBody>
+          <Messages>
+            {messages.map((msg, index) => (
+              <ChatMessage
+                key={index}
+                isMe={msg.isMe}
+                isLog={msg.isLog}
+                content={msg.content}
+                sentAt={msg.sentAt}
+              />
+            ))}
+          </Messages>
+        </ChatBody>
+        <ChatFooter
+          receiverId={receiverId}
+          setReceiverId={setReceiverId}
+          content={content}
+          setContent={setContent}
+          sendMessage={sendMessage}
+          getConversation={getConversation}
+          refreshContacts={() => contactListRef.current?.refreshContacts()}
+          isConnected={isConnected}
         />
-        <Input
-          type="text"
-          placeholder="Mensagem"
-          value={content}
-          onChange={(e: React.ChangeEvent<HTMLInputElement>) => setContent(e.target.value)}
-        />
-        <Button
-          onClick={() => {
-            if (!receiverId || !content) {
-              alert("Preencha ID do destinatário e a mensagem.");
-              return;
-            }
-            if (!isConnected) {
-              alert("Ainda não conectado ao servidor.");
-              return;
-            }
-            sendMessage(receiverId, content);
-            setContent("");
-          }}
-        >
-          Enviar
-        </Button>
-        <Button
-          onClick={() => {
-            if (!receiverId) {
-              alert("Preencha o ID do destinatário para buscar a conversa.");
-              return;
-            }
-            if (!isConnected) {
-              alert("Ainda não conectado ao servidor.");
-              return;
-            }
-            getConversation(receiverId);
-          }}
-        >
-          Buscar Conversa
-        </Button>
-      </ChatFooter>
-    </ChatContainer>
+
+      </ChatContainer>
+    </PageWrapper>
   );
 };
 

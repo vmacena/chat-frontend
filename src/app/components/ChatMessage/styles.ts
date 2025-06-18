@@ -21,7 +21,9 @@ export const Messages = styled.div`
   gap: 12px;
 `;
 
-export const Message = styled.div<{ isMe: boolean; isLog: boolean }>`
+export const Message = styled.div.withConfig({
+  shouldForwardProp: (prop) => prop !== "isMe" && prop !== "isLog"
+})<{ isMe: boolean; isLog: boolean }>`
   align-self: ${({ isMe, isLog }) =>
     isLog ? "center" : isMe ? "flex-end" : "flex-start"};
   background-color: ${({ isMe, isLog }) =>
@@ -55,7 +57,6 @@ export const Input = styled.input`
   background-color: #2e2e2e;
   color: #ffffff;
   font-size: 14px;
-
   &::placeholder {
     color: #aaaaaa;
   }
@@ -69,7 +70,6 @@ export const Button = styled.button`
   color: #ffffff;
   cursor: pointer;
   font-weight: bold;
-
   &:hover {
     background-color: #075e54;
   }

@@ -18,8 +18,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ isMe, isLog, content, 
         <i>{content}</i>
       ) : (
         <>
-          <b>{isMe ? "Você" : "Outro"}:</b> {content}{" "}
-          <i>({formatarDataMensagem(sentAt)})</i>
+          {content} <i>({formatarDataMensagem(sentAt)})</i>
         </>
       )}
     </StyledMessage>

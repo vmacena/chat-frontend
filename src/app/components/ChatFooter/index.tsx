@@ -1,56 +1,74 @@
-import React from "react";
-import { ChatFooterContainer, Input, Button } from "./styles";
+import React, { useState } from "react";
+import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
+import { Smile, Send } from "lucide-react";
+import {
+  ChatFooterContainer,
+  Input,
+  IconButton,
+  EmojiWrapper,
+  EmojiButton,
+} from "./styles";
 
 interface ChatFooterProps {
   receiverId: string;
   setReceiverId: (v: string) => void;
   content: string;
-  setContent: (v: string) => void;
+  setContent: React.Dispatch<React.SetStateAction<string>>;
   sendMessage: (receiverId: string, content: string) => void;
   getConversation: (receiverId: string) => void;
+  refreshContacts: () => void;
   isConnected: boolean;
 }
 
 const ChatFooter: React.FC<ChatFooterProps> = ({
   receiverId,
-  setReceiverId,
   content,
   setContent,
   sendMessage,
   getConversation,
+  refreshContacts,
   isConnected,
 }) => {
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  const handleSend = async () => {
+    if (!receiverId || !content.trim() || !isConnected) return;
+    await sendMessage(receiverId, content);
+    await getConversation(receiverId);
+    refreshContacts();
+    setContent("");
+  };
+
+  const handleEmojiClick = (emojiData: EmojiClickData) => {
+    setContent((prev: string) => prev + emojiData.emoji);
+    setShowEmojiPicker(false);
+  };
+
   return (
     <ChatFooterContainer>
       <Input
-        type="text"
-        placeholder="ID do destinatário"
-        value={receiverId}
-        onChange={(e) => setReceiverId(e.target.value)}
-      />
-      <Input
-        type="text"
         placeholder="Mensagem"
         value={content}
         onChange={(e) => setContent(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") handleSend();
+        }}
       />
-      <Button
-        onClick={() => {
-          if (!receiverId || !content || !isConnected) return;
-          sendMessage(receiverId, content);
-          setContent("");
-        }}
-      >
-        Enviar
-      </Button>
-      <Button
-        onClick={() => {
-          if (!receiverId || !isConnected) return;
-          getConversation(receiverId);
-        }}
-      >
-        Buscar Conversa
-      </Button>
+
+      <EmojiWrapper>
+        <EmojiButton onClick={() => setShowEmojiPicker((v) => !v)}>
+          <Smile size={22} />
+        </EmojiButton>
+        {showEmojiPicker && (
+          <div style={{ position: "absolute", bottom: "55px", right: "60px", zIndex: 1000 }}>
+            <EmojiPicker onEmojiClick={handleEmojiClick} lazyLoadEmojis />
+          </div>
+        )}
+      </EmojiWrapper>
+
+      <IconButton onClick={handleSend}>
+        <Send size={20} />
+      </IconButton>
     </ChatFooterContainer>
   );
 };

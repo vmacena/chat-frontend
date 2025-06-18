@@ -29,7 +29,7 @@ export function useChat(token: string) {
 
     const newConnection = new signalR.HubConnectionBuilder()
       .withUrl("http://localhost:5008/chatHub", {
-        accessTokenFactory: () => token,
+        accessTokenFactory: () => token
       })
       .configureLogging(signalR.LogLevel.Information)
       .withAutomaticReconnect()
@@ -49,9 +49,10 @@ export function useChat(token: string) {
       });
     });
 
-    newConnection.onclose(() => {
+    newConnection.onclose((error) => {
       toast.error("Desconectado.");
       setIsConnected(false);
+      console.error("SignalR closed with error:", error);
     });
 
     newConnection
@@ -60,8 +61,9 @@ export function useChat(token: string) {
         setConnection(newConnection);
         setIsConnected(true);
       })
-      .catch(() => {
+      .catch((err) => {
         toast.error("Erro ao conectar.");
+        console.error("SignalR start error:", err);
       });
 
     return () => {
@@ -76,8 +78,9 @@ export function useChat(token: string) {
     }
     try {
       await connection.invoke("SendMessage", { receiverId, content });
-    } catch {
-      toast.error("Erro ao enviar.");
+    } catch (err) {
+      console.error("Error sending message:", err);
+      toast.error(`Erro ao enviar: ${err instanceof Error ? err.message : err}`);
     }
   };
 
@@ -88,7 +91,8 @@ export function useChat(token: string) {
     }
     try {
       await connection.invoke("GetConversation", receiverId);
-    } catch {
+    } catch (err) {
+      console.error("Error fetching conversation:", err);
       toast.error("Erro ao buscar conversa.");
     }
   };
