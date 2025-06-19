@@ -1,8 +1,24 @@
 'use client';
 
-import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
-import { ContactListContainer, ContactItem, AddContactButton } from './styles';
-import { FiUserPlus } from 'react-icons/fi';
+import React, {
+  useEffect,
+  useState,
+  forwardRef,
+  useImperativeHandle
+} from 'react';
+import {
+  ContactListContainer,
+  ContactItem,
+  AddContactButton,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  CloseButton,
+  EmailInput,
+  ModalActions,
+  SubmitButton
+} from './styles';
+import { FiUserPlus, FiX, FiPlus } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 
 interface Contact {
@@ -21,66 +37,89 @@ export type ContactListHandle = {
   refreshContacts: () => void;
 };
 
-const ContactList = forwardRef<ContactListHandle, Props>(({ selectedId, onSelect }, ref) => {
-  const [contacts, setContacts] = useState<Contact[]>([]);
+const ContactList = forwardRef<ContactListHandle, Props>(
+  ({ selectedId, onSelect }, ref) => {
+    const [contacts, setContacts] = useState<Contact[]>([]);
+    const [showModal, setShowModal] = useState(false);
+    const [email, setEmail] = useState('');
 
-  const fetchContacts = async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-    const res = await fetch('http://localhost:5008/api/contacts', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (res.ok) {
-      const data = await res.json();
-      setContacts(data);
-    }
-  };
+    const fetchContacts = async () => {
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await fetch('http://localhost:5008/api/contacts', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.ok) setContacts(await res.json());
+    };
 
-  useImperativeHandle(ref, () => ({ refreshContacts: fetchContacts }));
+    const addContact = async () => {
+      if (!email) return;
+      const token = localStorage.getItem('token');
+      if (!token) return;
+      const res = await fetch('http://localhost:5008/api/contacts/by-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ email }),
+      });
+      if (res.ok) {
+        await fetchContacts();
+        setShowModal(false);
+        setEmail('');
+      } else {
+        toast.error('Erro ao adicionar contato.');
+      }
+    };
 
-  useEffect(() => {
-    fetchContacts();
-  }, []);
+    useImperativeHandle(ref, () => ({ refreshContacts: fetchContacts }));
+    useEffect(() => {
+      fetchContacts();
+    }, []);
 
-  const handleAddContact = async () => {
-    const email = prompt('Digite o email do contato');
-    if (!email) return;
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    return (
+      <ContactListContainer>
+        {contacts.map(c => (
+          <ContactItem
+            key={c.id}
+            isSelected={c.id === selectedId}
+            onClick={() => onSelect(c.id)}
+          >
+            <strong>{c.name || '(sem nome)'}</strong>
+            <p>{c.lastMessage}</p>
+          </ContactItem>
+        ))}
+        <AddContactButton onClick={() => setShowModal(true)}>
+          <FiUserPlus size={24} />
+        </AddContactButton>
 
-    const res = await fetch('http://localhost:5008/api/contacts/by-email', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ email }),
-    });
-
-    if (res.ok) {
-      await fetchContacts();
-    } else {
-      toast.error('Erro ao adicionar contato.');
-    }
-  };
-
-  return (
-    <ContactListContainer>
-      {contacts.map((contact) => (
-        <ContactItem
-          key={contact.id}
-          isSelected={contact.id === selectedId}
-          onClick={() => onSelect(contact.id)}
-        >
-          <strong>{contact.name || '(sem nome)'}</strong>
-          <p>{contact.lastMessage}</p>
-        </ContactItem>
-      ))}
-      <AddContactButton onClick={handleAddContact}>
-        <FiUserPlus size={24} />
-      </AddContactButton>
-    </ContactListContainer>
-  );
-});
+        {showModal && (
+          <ModalOverlay onClick={() => setShowModal(false)}>
+            <ModalContent onClick={e => e.stopPropagation()}>
+              <ModalHeader>
+                <h3>Adicionar contato</h3>
+                <CloseButton onClick={() => setShowModal(false)}>
+                  <FiX size={20} />
+                </CloseButton>
+              </ModalHeader>
+              <EmailInput
+                type="email"
+                placeholder="Email do contato"
+                value={email}
+                onChange={e => setEmail(e.target.value)}
+              />
+              <ModalActions>
+                <SubmitButton onClick={addContact}>
+                  <FiPlus size={16} />
+                </SubmitButton>
+              </ModalActions>
+            </ModalContent>
+          </ModalOverlay>
+        )}
+      </ContactListContainer>
+    );
+  }
+);
 
 export default ContactList;

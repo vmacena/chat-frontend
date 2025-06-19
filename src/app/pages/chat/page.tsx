@@ -60,7 +60,6 @@ const ChatPage: React.FC = () => {
         </ChatBody>
         <ChatFooter
           receiverId={receiverId}
-          setReceiverId={setReceiverId}
           content={content}
           setContent={setContent}
           sendMessage={sendMessage}

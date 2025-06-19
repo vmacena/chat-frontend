@@ -1,21 +1,21 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import EmojiPicker, { EmojiClickData } from "emoji-picker-react";
-import { Smile, Send } from "lucide-react";
+import { Paperclip, Smile, Send } from "lucide-react";
 import {
   ChatFooterContainer,
   Input,
-  IconButton,
+  ActionButton,
+  SendButton,
   EmojiWrapper,
-  EmojiButton,
 } from "./styles";
+import { useUploadFile } from "@/app/hooks/useUploadFile";
 
 interface ChatFooterProps {
   receiverId: string;
-  setReceiverId: (v: string) => void;
   content: string;
   setContent: React.Dispatch<React.SetStateAction<string>>;
-  sendMessage: (receiverId: string, content: string) => void;
-  getConversation: (receiverId: string) => void;
+  sendMessage: (receiverId: string, content: string) => Promise<void>;
+  getConversation: (receiverId: string) => Promise<void>;
   refreshContacts: () => void;
   isConnected: boolean;
 }
@@ -30,6 +30,8 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
   isConnected,
 }) => {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { uploadFile } = useUploadFile();
 
   const handleSend = async () => {
     if (!receiverId || !content.trim() || !isConnected) return;
@@ -40,25 +42,30 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
   };
 
   const handleEmojiClick = (emojiData: EmojiClickData) => {
-    setContent((prev: string) => prev + emojiData.emoji);
+    setContent(prev => prev + emojiData.emoji);
     setShowEmojiPicker(false);
+  };
+
+  const handleFileButton = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && isConnected && receiverId) {
+      await uploadFile(file, receiverId);
+      await getConversation(receiverId);
+      refreshContacts();
+    }
+    e.target.value = "";
   };
 
   return (
     <ChatFooterContainer>
-      <Input
-        placeholder="Mensagem"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") handleSend();
-        }}
-      />
-
       <EmojiWrapper>
-        <EmojiButton onClick={() => setShowEmojiPicker((v) => !v)}>
+        <ActionButton onClick={() => setShowEmojiPicker(v => !v)}>
           <Smile size={22} />
-        </EmojiButton>
+        </ActionButton>
         {showEmojiPicker && (
           <div style={{ position: "absolute", bottom: "55px", right: "60px", zIndex: 1000 }}>
             <EmojiPicker onEmojiClick={handleEmojiClick} lazyLoadEmojis />
@@ -66,9 +73,26 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
         )}
       </EmojiWrapper>
 
-      <IconButton onClick={handleSend}>
+      <Input
+        placeholder="Mensagem"
+        value={content}
+        onChange={e => setContent(e.target.value)}
+        onKeyDown={e => { if (e.key === "Enter") handleSend(); }}
+      />
+
+      <ActionButton onClick={handleFileButton}>
+        <Paperclip size={20} />
+      </ActionButton>
+      <input
+        type="file"
+        style={{ display: "none" }}
+        ref={fileInputRef}
+        onChange={handleFileChange}
+      />
+
+      <SendButton onClick={handleSend}>
         <Send size={20} />
-      </IconButton>
+      </SendButton>
     </ChatFooterContainer>
   );
 };

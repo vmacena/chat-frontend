@@ -15,7 +15,6 @@ export function useLogin() {
       const response = await axios.post('http://localhost:5008/auth/login', { email, password });
       const token = response.data.token;
 
-      // Validação básica de formato de JWT
       if (!token || token.split('.').length !== 3) {
         throw new Error('Token inválido ou mal formatado.');
       }

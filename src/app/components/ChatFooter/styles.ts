@@ -19,7 +19,23 @@ export const Input = styled.input`
   outline: none;
 `;
 
-export const IconButton = styled.button`
+export const ActionButton = styled.button`
+  background-color: white;
+  color: #1976d2;
+  border: none;
+  padding: 8px;
+  border-radius: 50%;
+  margin: 0 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  &:hover {
+    background-color: #f0f0f0;
+  }
+`;
+
+export const SendButton = styled.button`
   background-color: #1976d2;
   color: white;
   border: none;
@@ -30,18 +46,8 @@ export const IconButton = styled.button`
   align-items: center;
   justify-content: center;
   cursor: pointer;
-
   &:hover {
     background-color: #1565c0;
-  }
-`;
-
-export const EmojiButton = styled(IconButton)`
-  background-color: transparent;
-  color: white;
-
-  &:hover {
-    background-color: rgba(255, 255, 255, 0.1);
   }
 `;
 
