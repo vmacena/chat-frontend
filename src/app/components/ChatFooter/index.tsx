@@ -62,6 +62,15 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
 
   return (
     <ChatFooterContainer>
+
+
+      <Input
+        placeholder="Mensagem"
+        value={content}
+        onChange={e => setContent(e.target.value)}
+        onKeyDown={e => { if (e.key === "Enter") handleSend(); }}
+      />
+
       <EmojiWrapper>
         <ActionButton onClick={() => setShowEmojiPicker(v => !v)}>
           <Smile size={22} />
@@ -72,13 +81,6 @@ const ChatFooter: React.FC<ChatFooterProps> = ({
           </div>
         )}
       </EmojiWrapper>
-
-      <Input
-        placeholder="Mensagem"
-        value={content}
-        onChange={e => setContent(e.target.value)}
-        onKeyDown={e => { if (e.key === "Enter") handleSend(); }}
-      />
 
       <ActionButton onClick={handleFileButton}>
         <Paperclip size={20} />
