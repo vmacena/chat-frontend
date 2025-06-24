@@ -10,6 +10,7 @@ import {
   ContactListContainer,
   ContactItem,
   AddContactButton,
+  LogoutButton,
   ModalOverlay,
   ModalContent,
   ModalHeader,
@@ -18,8 +19,9 @@ import {
   ModalActions,
   SubmitButton
 } from './styles';
-import { FiUserPlus, FiX, FiPlus } from 'react-icons/fi';
+import { FiUserPlus, FiX, FiPlus, FiLogOut } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import { useRouter } from 'next/navigation';
 
 interface Contact {
   id: string;
@@ -42,6 +44,7 @@ const ContactList = forwardRef<ContactListHandle, Props>(
     const [contacts, setContacts] = useState<Contact[]>([]);
     const [showModal, setShowModal] = useState(false);
     const [email, setEmail] = useState('');
+    const router = useRouter();
 
     const fetchContacts = async () => {
       const token = localStorage.getItem('token');
@@ -68,9 +71,16 @@ const ContactList = forwardRef<ContactListHandle, Props>(
         await fetchContacts();
         setShowModal(false);
         setEmail('');
+        toast.success('Contato adicionado com sucesso!');
       } else {
         toast.error('Erro ao adicionar contato.');
       }
+    };
+
+    const handleLogout = () => {
+      localStorage.removeItem('token');
+      toast.success('Logout realizado com sucesso!');
+      router.push('/');
     };
 
     useImperativeHandle(ref, () => ({ refreshContacts: fetchContacts }));
@@ -90,6 +100,11 @@ const ContactList = forwardRef<ContactListHandle, Props>(
             <p>{c.lastMessage}</p>
           </ContactItem>
         ))}
+
+        <LogoutButton onClick={handleLogout}>
+          <FiLogOut size={18} />
+        </LogoutButton>
+
         <AddContactButton onClick={() => setShowModal(true)}>
           <FiUserPlus size={24} />
         </AddContactButton>

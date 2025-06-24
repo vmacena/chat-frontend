@@ -118,3 +118,32 @@ export const SubmitButton = styled.button`
   border-radius: 4px;
   cursor: pointer;
 `;
+
+
+export const LogoutButton = styled.button`
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(220, 53, 69, 0.3);
+
+  &:hover {
+    background: #c82333;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+`;
